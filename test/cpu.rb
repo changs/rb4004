@@ -75,6 +75,36 @@ class TestCPU < Minitest::Test
     assert_equal @cpu.carry, 1
   end
 
+  def test_cmc
+    @cpu.carry.bit = 0
+    @cpu.run('F3')
+    assert_equal @cpu.carry, 1
+    @cpu.run('F3')
+    assert_equal @cpu.carry, 0
+  end
+
+  def test_cma
+    @cpu.acc.bits = 0xA
+    @cpu.run('F4')
+    assert_equal @cpu.acc, 0x5
+  end
+
+  def test_ral
+    @cpu.acc.set([0, 0, 1, 0])
+    @cpu.carry.bit = 1
+    @cpu.run('F5')
+    assert_equal @cpu.acc.to_s, '0101'
+    assert_equal @cpu.carry, 0
+  end
+
+  def test_rar
+    @cpu.acc.set([0, 0, 1, 1])
+    @cpu.carry.bit = 1
+    @cpu.run('F6')
+    assert_equal @cpu.acc.to_s, '1001'
+    assert_equal @cpu.carry, 1
+  end
+
   def test_dac_no_borrow
     @cpu.acc.bits = 0xF
     @cpu.carry.bits = 0

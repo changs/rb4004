@@ -32,6 +32,10 @@ class CPU
       0xF0 => :i_CLB, # Clear Both
       0xF1 => :i_CLC, # Clear Carry
       0xF2 => :i_IAC, # Increment Accumulator
+      0xF3 => :i_CMC, # Complement Carry
+      0xF4 => :i_CMA, # Complement Accumulator
+      0xF5 => :i_RAL, # Rotate Left
+      0xF6 => :i_RAR, # Rotate Right
       0xF8 => :i_DAC, # Decrement Accumulator
       0xFA => :i_STC, # Set Carry
     }
@@ -68,6 +72,26 @@ class CPU
       acc.bits = acc.to_hex + 1
       carry.bit = 0
     end
+  end
+
+  def i_CMC
+    carry == 0 ? carry.bit = 1 : carry.bit = 0
+  end
+
+  def i_CMA
+    acc.set(acc.map { |bit| bit == 0 ? bit = 1 : bit = 0 })
+  end
+
+  def i_RAL
+    tmp = carry.to_hex
+    carry.bit = acc[0]
+    acc.set([acc[1], acc[2], acc[3], tmp])
+  end
+
+  def i_RAR
+    tmp = carry.to_hex
+    carry.bit = acc[3]
+    acc.set([tmp, acc[0], acc[1], acc[2]])
   end
 
   def i_DAC
@@ -109,6 +133,8 @@ end
 
 class BitField
   using ArrayExtension
+  include Enumerable
+
   def initialize(length:, value: 0)
     @bits = Array.new(length) { value }
     @length = length
@@ -118,6 +144,10 @@ class BitField
     @bits = hex_value.to_s(2).chars.map(&:to_i).last(@length).rjust(@length, 0)
   end
   alias bit= bits=
+
+  def set(array_of_ints)
+    @bits = array_of_ints.last(@length)
+  end
 
   def to_s
     @bits.join
@@ -129,6 +159,14 @@ class BitField
 
   def ==(other)
     to_hex == other
+  end
+
+  def [](i)
+    @bits[i]
+  end
+
+  def each(&block)
+    @bits.each(&block)
   end
 end
 
