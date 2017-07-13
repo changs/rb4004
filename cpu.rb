@@ -3,20 +3,18 @@ require 'pry'
 class CPU
   attr_accessor :registers, :acc, :carry, :data_ptr, :code_ptr
   def initialize
-    @registers = (0..16).map { BitField.new(length: 4) }
-    @acc = BitField.new(length: 4) # accumulator
-    @carry = BitField.new(length: 1)
-    @data_ptr = BitField.new(length: 8)
-    @code_ptr = BitField.new(length: 12)
+    @registers = Array.new(16) { 0 }
+    @acc = 0 # accumulator
+    @carry = 0
+    @data_ptr = 0
+    @code_ptr = 0
   end
 
   def run(object_code)
     object_code.delete(' ').chars.map(&:hex).each_slice(2) do |high_nibble, low_nibble|
       if high_nibble < 0xE
-        puts "Instruction #{high_nibble}, arg #{low_nibble}"
         send(opcodes[high_nibble], low_nibble)
       else
-        puts "Instruction #{high_nibble}#{low_nibble}"
         send(opcodes[(high_nibble * 16 + low_nibble)])
       end
     end
@@ -44,7 +42,7 @@ class CPU
   def i_NOP(_); end
 
   def i_LDM(arg)
-    acc.bits = arg
+    self.acc = arg
   end
 
   def i_LD(arg)
@@ -56,56 +54,56 @@ class CPU
   end
 
   def i_CLB
-    carry.bit = 0
-    acc.bits = 0
+    self.carry = 0
+    self.acc = 0
   end
 
   def i_CLC
-    carry.bit = 0
+    self.carry = 0
   end
 
   def i_IAC
     if acc == 0xF
-      acc.bits = 0
-      carry.bit = 1
+      self.acc = 0
+      self.carry = 1
     else
-      acc.bits = acc.to_hex + 1
-      carry.bit = 0
+      self.acc += 1
+      self.carry = 0
     end
   end
 
   def i_CMC
-    carry == 0 ? carry.bit = 1 : carry.bit = 0
+    self.carry ^= 1
   end
 
   def i_CMA
-    acc.set(acc.map { |bit| bit == 0 ? bit = 1 : bit = 0 })
+    self.acc ^= 0xf
   end
 
   def i_RAL
-    tmp = carry.to_hex
-    carry.bit = acc[0]
-    acc.set([acc[1], acc[2], acc[3], tmp])
+    tmp = self.carry
+    self.carry = acc[3]
+    self.acc = [acc[2], acc[1], acc[0], tmp].join.to_i(2)
   end
 
   def i_RAR
-    tmp = carry.to_hex
-    carry.bit = acc[3]
-    acc.set([tmp, acc[0], acc[1], acc[2]])
+    tmp = self.carry
+    self.carry = acc[0]
+    self.acc = [tmp, acc[3], acc[2], acc[1]].join.to_i(2)
   end
 
   def i_DAC
     if acc == 0x0
-      acc.bits = 0xF
-      carry.bit = 0
+      self.acc = 0xF
+      self.carry = 0
     else
-      acc.bits = acc.to_hex - 1
-      carry.bit = 1
+      self.acc -= 1
+      self.carry = 1
     end
   end
 
   def i_STC
-    carry.bit = 1
+    self.carry = 1
   end
 
   16.times do |i|
@@ -114,7 +112,7 @@ class CPU
 
   def memory_dump
     16.times do |i|
-      puts "R#{i} 0x#{registers[i].to_hex.to_s(16).upcase}"
+      puts "R#{i} 0x#{registers[i]}"
     end
     puts "Acc:\t#{acc}"
     puts "Carry: #{carry}"
@@ -123,52 +121,6 @@ class CPU
   end
 end
 
-module ArrayExtension
-  refine Array do
-    def rjust(n, x)
-      Array.new([0, n - length].max, x) + self
-    end
-  end
-end
-
-class BitField
-  using ArrayExtension
-  include Enumerable
-
-  def initialize(length:, value: 0)
-    @bits = Array.new(length) { value }
-    @length = length
-  end
-
-  def bits=(hex_value)
-    @bits = hex_value.to_s(2).chars.map(&:to_i).last(@length).rjust(@length, 0)
-  end
-  alias bit= bits=
-
-  def set(array_of_ints)
-    @bits = array_of_ints.last(@length).rjust(@length, 0)
-  end
-
-  def to_s
-    @bits.join
-  end
-
-  def to_hex
-    @bits.join.to_i(2)
-  end
-
-  def ==(other)
-    to_hex == other
-  end
-
-  def [](i)
-    @bits[i]
-  end
-
-  def each(&block)
-    @bits.each(&block)
-  end
-end
 
 if __FILE__ == $PROGRAM_NAME
   cpu = CPU.new.run(ARGV[0])
