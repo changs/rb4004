@@ -35,6 +35,7 @@ class CPU
       0xF5 => :i_RAL, # Rotate Left
       0xF6 => :i_RAR, # Rotate Right
       0xF8 => :i_DAC, # Decrement Accumulator
+      0xF9 => :i_TCS, # Transfer Carry Subtract
       0xFA => :i_STC, # Set Carry
     }
   end
@@ -93,13 +94,18 @@ class CPU
   end
 
   def i_DAC
-    if acc == 0x0
+    if acc.zero?
       self.acc = 0xF
       self.carry = 0
     else
       self.acc -= 1
       self.carry = 1
     end
+  end
+
+  def i_TCS
+    self.acc = carry.zero? ? 9 : 10
+    self.carry = 0
   end
 
   def i_STC

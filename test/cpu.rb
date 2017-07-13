@@ -121,6 +121,18 @@ class TestCPU < Minitest::Test
     assert_equal @cpu.carry, 0
   end
 
+  def test_tcs
+    @cpu.carry = 0
+    @cpu.run('F9')
+    assert_equal @cpu.acc, 9
+    assert_equal @cpu.carry, 0
+
+    @cpu.carry = 1
+    @cpu.run('F9')
+    assert_equal @cpu.acc, 10
+    assert_equal @cpu.carry, 0
+  end
+
   def test_stc
     assert_equal @cpu.carry, 0
     @cpu.run('FA')
