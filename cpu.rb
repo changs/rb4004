@@ -146,7 +146,7 @@ class BitField
   alias bit= bits=
 
   def set(array_of_ints)
-    @bits = array_of_ints.last(@length)
+    @bits = array_of_ints.last(@length).rjust(@length, 0)
   end
 
   def to_s
