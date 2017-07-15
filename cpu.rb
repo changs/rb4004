@@ -3,22 +3,29 @@ require 'pry'
 class CPU
   attr_accessor :registers, :acc, :carry, :data_ptr, :code_ptr
   def initialize
+    reset
+  end
+
+  def run(object_code)
+    @code_ptr = 0
+    code = object_code.strip.gsub(/\s+/, '').chars.map(&:hex)
+    while(@code_ptr < code.length - 1) do
+      if code[@code_ptr] < 0xE
+        send(opcodes[code[@code_ptr]], code[@code_ptr + 1])
+      else
+        send(opcodes[code[@code_ptr] * 0x10 + code[@code_ptr + 1]])
+      end
+      @code_ptr += 2
+    end
+    self
+  end
+
+  def reset
     @registers = Array.new(16) { 0 }
     @acc = 0 # accumulator
     @carry = 0
     @data_ptr = 0
     @code_ptr = 0
-  end
-
-  def run(object_code)
-    object_code.delete(' ').chars.map(&:hex).each_slice(2) do |high_nibble, low_nibble|
-      if high_nibble < 0xE
-        send(opcodes[high_nibble], low_nibble)
-      else
-        send(opcodes[(high_nibble * 16 + low_nibble)])
-      end
-    end
-    self
   end
 
   def opcodes
