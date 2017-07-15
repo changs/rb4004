@@ -32,6 +32,7 @@ class CPU
   def opcodes
     @opcodes ||= {
       0x0 => :i_NOP, # No Operation
+      0x1 => :i_JCN, # Jump Conditional
       0x4 => :i_JUN, # Jump Uncoditional
       0xD => :i_LDM, # Load Immediate
       0xA => :i_LD,  # Load
@@ -51,7 +52,16 @@ class CPU
 
   def i_NOP(_); end
 
-  def i_JUN(arg)
+  def i_JCN(_)
+    c1, c2, c3, c4 = Array.new(4) { |i| @code[@code_ptr + 1][i] }
+    if (c1 == 0 && (( c2 == 1 && self.acc.zero? ) || ( c3 == 1 && self.carry == 1))) ||
+       (c1 == 1 && (( c2 == 1 && self.acc != 0 )  || ( c3 == 1 && self.carry == 0)))
+      @code_ptr = ( [ @code[@code_ptr + 2] * 0x10, @code[@code_ptr + 3]] * 2).join.to_i
+      @jump = true
+    end
+  end
+
+  def i_JUN(_)
     @jump = true
     @code_ptr = ([@code[@code_ptr + 1] * 0x100, @code[@code_ptr + 2] * 0x10, @code[@code_ptr + 3]] * 2).join.to_i
   end

@@ -27,6 +27,12 @@ class TestCPU < Minitest::Test
     @cpu.run('00')
   end
 
+  def test_jcn
+    @cpu.carry = 1
+    @cpu.run('16 03 F4')
+    assert_equal 0, @cpu.acc
+  end
+
   def test_jun
     @cpu.run('40 03 F4')
     assert_equal 0, @cpu.acc # jun opcode should jump around the acc inc instruction
