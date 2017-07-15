@@ -8,14 +8,15 @@ class CPU
 
   def run(object_code)
     @code_ptr = 0
-    code = object_code.strip.gsub(/\s+/, '').chars.map(&:hex)
-    while(@code_ptr < code.length - 1) do
-      if code[@code_ptr] < 0xE
-        send(opcodes[code[@code_ptr]], code[@code_ptr + 1])
+    @code = object_code.strip.gsub(/\s+/, '').chars.map(&:hex)
+    while(@code_ptr < @code.length - 1) do
+      if @code[@code_ptr] < 0xE
+        send(opcodes[@code[@code_ptr]], @code[@code_ptr + 1])
       else
-        send(opcodes[code[@code_ptr] * 0x10 + code[@code_ptr + 1]])
+        send(opcodes[@code[@code_ptr] * 0x10 + @code[@code_ptr + 1]])
       end
-      @code_ptr += 2
+      @code_ptr += 2 unless @jump
+      @jump = false
     end
     self
   end
@@ -31,6 +32,7 @@ class CPU
   def opcodes
     @opcodes ||= {
       0x0 => :i_NOP, # No Operation
+      0x4 => :i_JUN, # Jump Uncoditional
       0xD => :i_LDM, # Load Immediate
       0xA => :i_LD,  # Load
       0xB => :i_XCH, # Exchange
@@ -48,6 +50,11 @@ class CPU
   end
 
   def i_NOP(_); end
+
+  def i_JUN(arg)
+    @jump = true
+    @code_ptr = ([@code[@code_ptr + 1] * 0x100, @code[@code_ptr + 2] * 0x10, @code[@code_ptr + 3]] * 2).join.to_i
+  end
 
   def i_LDM(arg)
     self.acc = arg
