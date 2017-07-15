@@ -33,6 +33,7 @@ class CPU
     @opcodes ||= {
       0x0 => :i_NOP, # No Operation
       0x1 => :i_JCN, # Jump Conditional
+      0x2 => :i_FIM, # Fetch Immediate
       0x4 => :i_JUN, # Jump Uncoditional
       0xD => :i_LDM, # Load Immediate
       0xA => :i_LD,  # Load
@@ -59,6 +60,11 @@ class CPU
       @code_ptr = ([@code[@code_ptr + 2] * 0x10, @code[@code_ptr + 3]] * 2).join.to_i
       @jump = true
     end
+  end
+
+  def i_FIM(_)
+    @registers[@code[@code_ptr + 1]] = @code[@code_ptr + 3]
+    @registers[@code[@code_ptr + 1] + 1] = @code[@code_ptr + 2]
   end
 
   def i_JUN(_)
