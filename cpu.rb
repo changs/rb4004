@@ -54,8 +54,8 @@ class CPU
 
   def i_JCN(_)
     c1, c2, c3, c4 = Array.new(4) { |i| @code[@code_ptr + 1][i] }
-    if (c1 == 0 && (( c2 == 1 && acc == 0 ) || ( c3 == 1 && carry == 1))) ||
-       (c1 == 1 && (( c2 == 1 && acc != 0 )  || ( c3 == 1 && carry == 0)))
+    if (c1 == 0 && ((c2 == 1 && acc == 0) || (c3 == 1 && carry == 1))) ||
+       (c1 == 1 && ((c2 == 1 && acc != 0) || (c3 == 1 && carry == 0)))
       @code_ptr = ([@code[@code_ptr + 2] * 0x10, @code[@code_ptr + 3]] * 2).join.to_i
       @jump = true
     end

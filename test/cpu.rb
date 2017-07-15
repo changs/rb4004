@@ -11,7 +11,7 @@ class TestCPU < Minitest::Test
     (0..15).each do |i|
       assert_equal @cpu.registers[i], 0
     end
-    assert_equal @cpu.acc, 0 
+    assert_equal @cpu.acc, 0
     assert_equal @cpu.carry, 0
     assert_equal @cpu.data_ptr, 0
     assert_equal @cpu.code_ptr, 0
